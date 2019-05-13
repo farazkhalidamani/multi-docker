@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t famani/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run famani/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t famani/multi-client ./client
+  - docker build -t famani/multi-nginx ./nginx
+  - docker build -t famani/multi-server ./server
+  - docker build -t famani/multi-worker ./worker
+
+# Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# Take those images and put them into dockerhub
+  - docker push famani/multi-client
+  - docker push famani/multi-nginx
+  - docker push famani/multi-server
+  - docker push famani/multi-worker
